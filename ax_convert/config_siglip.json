@@ -1,0 +1,43 @@
+{
+    "model_type": "ONNX",
+    "npu_mode": "NPU3",
+    "target_hardware": "AX650",
+    "quant": {
+      "input_configs": [
+        {
+          "tensor_name": "DEFAULT",
+          "calibration_dataset": "siglip.tar",
+          "calibration_size": -1,
+          "calibration_format": "NumpyObject"
+        }
+      ],
+      "calibration_method": "MinMax",
+      "precision_analysis": true,
+      "precision_analysis_method": "EndToEnd",
+      "precision_analysis_mode": "NPUBackend",
+      "device": "cuda:0",
+      
+      "conv_bias_data_type": "FP32",
+      "enable_smooth_quant": true,
+      "disable_auto_refine_scale": true,
+      "transformer_opt_level": 1
+      
+      // "layer_configs":  [{
+      //     "start_tensor_names": ["DEFAULT"],
+      //     "end_tensor_names": ["DEFAULT"],
+      //     "data_type": "U8"
+      //   } ]
+    },
+
+    "input_processors": [
+      {
+        "tensor_name": "DEFAULT",
+        "tensor_format": "AutoColorSpace"
+      }
+    ],
+
+    "compiler": {
+      "check": 0
+    }
+  }
+  
