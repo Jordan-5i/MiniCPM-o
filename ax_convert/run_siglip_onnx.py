@@ -179,13 +179,25 @@ class MiniCPMV(torch.nn.Module):
         return vllm_embedding, vision_hidden_states
 
     def _decode(self, inputs_embeds, tokenizer, attention_mask, decode_text=False, **kwargs):
-        pass
+        model = AutoModel.from_pretrained(hf_model_path, trust_remote_code=True, # or openbmb/MiniCPM-o-2_6
+            attn_implementation='sdpa', torch_dtype=torch.float32) # sdpa or flash_attention_2, no eager
+        terminators = [tokenizer.convert_tokens_to_ids(i) for i in model.terminators]
+        output = model.llm.generate(
+            inputs_embeds=inputs_embeds,
+            pad_token_id=0,
+            eos_token_id=terminators,
+            attention_mask=attention_mask,
+            **kwargs
+        )
+        if decode_text:
+            return model._decode_text(output, tokenizer)
+        return output
     
 
 if  __name__ == '__main__':
     hf_model_path = "/data/wangjian/project/hf_cache/openbmb/MiniCPM-V-4"
     img_path = "/data/wangjian/project/MiniCPM-o/assets/minicpmo2_6/show_demo.jpg"
-    image = Image.open(img_path).convert('RGB').resize((448, 448))
+    image = Image.open(img_path).convert('RGB').resize((448, 448)) 
     question = "What is the landform in the picture?"
 
     msgs = [{'role': 'user', 'content': [image, question]}]
@@ -259,8 +271,8 @@ if  __name__ == '__main__':
     
     model_inputs["inputs_embeds"], vision_hidden_states = model.get_vllm_embedding(model_inputs)
 
-    result = model._decode(model_inputs["inputs_embeds"], tokenizer, inputs.attention_mask, decode_text=True)
-    
+    result = model._decode(model_inputs["inputs_embeds"], tokenizer, inputs.attention_mask, decode_text=True, max_new_tokens=2048, **generation_config)
+    print(result)
     calib_siglip_tarfile.close()
     calib_resampler_tarfile.close()
     
