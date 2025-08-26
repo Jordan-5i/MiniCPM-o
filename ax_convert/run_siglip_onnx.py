@@ -52,6 +52,7 @@ class MiniCPMV(torch.nn.Module):
     
         return position_ids
     
+    @torch.no_grad()
     def get_vllm_embedding(self, data):
         if 'vision_hidden_states' not in data:
             dtype = torch.float32
