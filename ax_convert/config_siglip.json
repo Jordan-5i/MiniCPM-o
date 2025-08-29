@@ -20,13 +20,13 @@
       "conv_bias_data_type": "FP32",
       "enable_smooth_quant": true,
       "disable_auto_refine_scale": true,
-      "transformer_opt_level": 1
+      "transformer_opt_level": 1,
       
-      // "layer_configs":  [{
-      //     "start_tensor_names": ["DEFAULT"],
-      //     "end_tensor_names": ["DEFAULT"],
-      //     "data_type": "U8"
-      //   } ]
+      "layer_configs":  [{
+          "start_tensor_names": ["DEFAULT"],
+          "end_tensor_names": ["DEFAULT"],
+          "data_type": "U16"
+        } ]
     },
 
     "input_processors": [
