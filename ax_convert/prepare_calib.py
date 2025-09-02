@@ -176,8 +176,6 @@ class MiniCPMV(torch.nn.Module):
                 new_vllm_embeddings.append(cur_vllm_emb)
 
         vllm_embedding = torch.stack(new_vllm_embeddings, dim=0)
-        np.save("vision_embedding_onnx.npy", vllm_embedding.detach().cpu().numpy())
-        np.save("vision_hidden_states_onnx.npy", [v.cpu().numpy() for v in vision_hidden_states])
         return vllm_embedding, vision_hidden_states
 
     def _decode(self, inputs_embeds, tokenizer, attention_mask, decode_text=False, **kwargs):

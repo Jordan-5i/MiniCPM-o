@@ -98,17 +98,11 @@ class MiniCPMV(torch.nn.Module):
                         "all_pixel_values": all_pixel_values.numpy(),
                         "position_ids": position_ids.numpy(),
                     }
-                    np.save(f"calib_siglip_data/data.npy", siglip_inputs)
-                    calib_siglip_tarfile.add(f"calib_siglip_data/data.npy")
-                    
                     vision_embedding = self.vpm.run(None, input_feed=siglip_inputs)[0]
                 resampler_inputs = {
                     "vision_embedding": vision_embedding,
                     # "tgt_sizes": tgt_sizes.type(torch.int64).numpy(),
                 }
-                np.save(f"calib_resampler_data/data.npy", resampler_inputs)
-                calib_resampler_tarfile.add(f"calib_resampler_data/data.npy")
-                
                 vision_embedding = self.resampler.run(None, input_feed=resampler_inputs)[0]
                 vision_embedding = torch.from_numpy(vision_embedding)
                 
@@ -207,11 +201,6 @@ if  __name__ == '__main__':
     siglip_onnx = "/data/wangjian/project/MiniCPM-o/ax_convert/siglip-slim.onnx"
     embed_token_path = "/data/wangjian/project/MiniCPM-o/ax_convert/embed_tokens.pth"
     
-    os.makedirs("calib_siglip_data", exist_ok=True)
-    os.makedirs("calib_resampler_data", exist_ok=True)
-    calib_siglip_tarfile = tarfile.open(f"calib_siglip_data/siglip.tar", "w")
-    calib_resampler_tarfile = tarfile.open(f"calib_resampler_data/resampler.tar", "w")
-    
     processor = AutoProcessor.from_pretrained(hf_model_path, trust_remote_code=True)
     tokenizer = AutoTokenizer.from_pretrained(hf_model_path, trust_remote_code=True)
     config = AutoConfig.from_pretrained(hf_model_path, trust_remote_code=True)
@@ -274,6 +263,3 @@ if  __name__ == '__main__':
 
     result = model._decode(model_inputs["inputs_embeds"], tokenizer, inputs.attention_mask, decode_text=True, max_new_tokens=2048, **generation_config)
     print(result)
-    calib_siglip_tarfile.close()
-    calib_resampler_tarfile.close()
-    
