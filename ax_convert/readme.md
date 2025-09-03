@@ -9,6 +9,7 @@ PS：`transformers==4.51.0`，其他版本可能运行时会有问题。
 - resampler 用于将siglip的输出feature压缩成固定数量的feature，resampler本身带有weight
     - 输入shape=[1,1024,1152]
     - 输出shape=[1,64,2560]
+    - 在huggingface repo中的config.json里默认`slice_mode=True`，即开启图片切片模式，因此siglip处理不同图片时，输出的feature数量不是固定的，为简单起见，本demo设置`slice_mode=False`
 
 下载huggingface的[minicpm-v-4](https://huggingface.co/openbmb/MiniCPM-V-4)到本地，运行minicpm-v-4的repo
 ```bash
