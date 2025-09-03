@@ -215,7 +215,6 @@ scp /data/wangjian/project/hf_cache/openbmb/MiniCPM-V-4/{*.py,*.json} root@10.12
 python3 run_axmodel.py -i show_demo.jpg -q "What is the landform in the picture?"
 ```
 输入图片：
-输出示例如下：
 ![demo.jpg](../assets/minicpmo2_6/show_demo.jpg)
 
 ```bash
