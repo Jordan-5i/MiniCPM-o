@@ -13,7 +13,7 @@ model.processor = processor
 model = model.eval().cuda(1)
 tokenizer = AutoTokenizer.from_pretrained('/data/wangjian/project/hf_cache/openbmb/MiniCPM-V-4', trust_remote_code=True) # or openbmb/MiniCPM-o-2_6
 
-image = Image.open('./assets/minicpmo2_6/show_demo.jpg').convert('RGB').resize((448, 448))
+image = Image.open('../assets/minicpmo2_6/show_demo.jpg').convert('RGB').resize((448, 448))
 
 # First round chat 
 question = "What is the landform in the picture?"

@@ -212,6 +212,14 @@ scp /data/wangjian/project/hf_cache/openbmb/MiniCPM-V-4/{*.py,*.json} root@10.12
 
 执行脚本：
 ```bash
-python run_axmodel.py
+python3 run_axmodel.py -i show_demo.jpg -q "What is the landform in the picture?"
 ```
-结果输出如下：
+输入图片：
+输出示例如下：
+![demo.jpg](../assets/minicpmo2_6/show_demo.jpg)
+
+```bash
+question1 = "What is the landform in the picture?"
+
+answer1 = The landform in the picture is a karst topography, characterized by its unique and dramatic appearance with steep limestone cliffs rising from the water' s surface. This type of landscape is commonly found in regions with significant geological activity, such as China's Li River.
+```

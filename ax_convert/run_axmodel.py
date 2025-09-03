@@ -50,22 +50,20 @@ class MiniCPMV:
         self.config = config
         self.vpm = ort.InferenceSession(siglip_onnx_path)
         self.resampler = ort.InferenceSession(resampler_onnx_path)
-        self.embed_tokens = torch.load(embed_token_path, weights_only=False) # 图像位置编码权重
+        self.embed_tokens = torch.load(embed_token_path, weights_only=False) # llm embedding
         
         self.prefill_slice_len=320
         self.kv_cache_len=1023
         self.prefill_decoder_sessions = []
         
-        # self.config.num_hidden_layers = 30
-        
         for i in tqdm(range(self.config.num_hidden_layers), desc="Init InferenceSession"):
             session = ort.InferenceSession(
-                f"{llm_axmodel_path}/minicpmv_p320_l{i}_together.axmodel"
+                f"{llm_axmodel_path}/llama_p{self.prefill_slice_len}_l{i}_together.axmodel"
             )
             self.prefill_decoder_sessions.append(session)
         
         self.post_process_session = ort.InferenceSession(
-            f"{llm_axmodel_path}/minicpmv_post.axmodel"
+            f"{llm_axmodel_path}/llama_post.axmodel"
         )
         print("model load done!")
         
@@ -340,9 +338,9 @@ class MiniCPMV:
         token_ids_cached.append(next_token)
 
         mask = np.zeros((1, 1, self.kv_cache_len + 1), dtype=np.float32).astype(bfloat16)
-        mask[:, :, :self.kv_cache_len] -= 65536
+        mask[:, :, :self.kv_cache_len + 1] -= 65536
         if prefill_len > 0:
-            mask[:, :, :token_len] = 0
+            mask[:, :, :token_len + 1] = 0
         
         for start_indice in range(self.kv_cache_len):
             if prefill_len > 0 and start_indice < token_len:
@@ -363,7 +361,7 @@ class MiniCPMV:
                 k_caches[i][:, start_indice, :] = outputs[0][:, :, :]
                 v_caches[i][:, start_indice, :] = outputs[1][:, :, :]
                 data = outputs[2]
-            mask[..., start_indice] = 0
+            mask[..., start_indice + 1] = 0
             if start_indice < token_len - 1:
                 pass
             else:
@@ -382,7 +380,7 @@ class MiniCPMV:
 
                 token_ids_cached.append(next_token)
 
-                if len(token_ids_cached) >= 3:
+                if len(token_ids_cached) >= 10:
                     msg = tokenizer.decode(token_ids_cached)
                     token_ids_cached.clear()
                     if "\ufffd" in msg:
@@ -392,17 +390,33 @@ class MiniCPMV:
         
         
 if  __name__ == '__main__':
-    hf_model_path = "../hf_cache/MiniCPM-V-4"
-    img_path = "./cake.jpg"
+    parser = argparse.ArgumentParser(description="MiniCPM-v4 axmodel demo")
+    parser.add_argument("--hf_model_path", type=str, default="../hf_cache/MiniCPM-V-4",
+                        help="Path to HuggingFace model")
+    parser.add_argument("--siglip_axmodel", type=str, default="./siglip.axmodel")
+    parser.add_argument("--resampler_axmodel", type=str, default="./resampler.axmodel")
+    parser.add_argument("--embed_token_path", type=str, default="./embed_tokens.pth")
+    parser.add_argument("--minicpm_axmodel", type=str, default="./minicpm-v-4_axmodel")
+    
+    parser.add_argument("-i", "--image", type=str, default="./show_demo.jpg",
+                        help="Path to the test image.")
+    parser.add_argument("-q", "--question", type=str, default="What is the landform in the picture?",
+                        help="Your question that you want to ask the model.")
+    args = parser.parse_args()
+    
+    
+    
+    hf_model_path = args.hf_model_path
+    img_path = args.image
     image = Image.open(img_path).convert('RGB').resize((448, 448))
-    question = "图片里有几个蛋糕？分别是什么颜色的？" # "What is the landform in the picture?"
+    question = args.question
 
     msgs = [{'role': 'user', 'content': [image, question]}]
     
-    resampler_axmodel = "./resampler.axmodel"
-    siglip_axmodel = "./siglip.axmodel"
-    embed_token_path = "./embed_tokens.pth"
-    llm_axmodel_path = "./minicpm-v-4_axmodel"
+    resampler_axmodel = args.resampler_axmodel
+    siglip_axmodel = args.siglip_axmodel
+    embed_token_path = args.embed_token_path
+    llm_axmodel_path = args.minicpm_axmodel
     
     processor = AutoProcessor.from_pretrained(hf_model_path, trust_remote_code=True)
     tokenizer = AutoTokenizer.from_pretrained(hf_model_path, trust_remote_code=True)
@@ -469,5 +483,3 @@ if  __name__ == '__main__':
     
     result = minicpm_axmodel._decode(model_inputs["inputs_embeds"].detach().numpy(), tokenizer, inputs.attention_mask, decode_text=True)
 
-    # inputs_embeds = np.load("input_embeds.npy")
-    # result = minicpm_axmodel._decode(inputs_embeds, tokenizer, inputs.attention_mask, decode_text=True)
